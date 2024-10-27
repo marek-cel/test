@@ -1,0 +1,46 @@
+pipeline {
+    agent {
+        dockerfile {
+            args '-v /var/www/html/jenkins/:/var/www/html/jenkins/'
+        }
+    }
+
+    environment {
+        RECIPIENT_LIST = 'dev@marekcel.pl'
+    }
+
+    triggers {
+        cron('0 1 * * 6')
+        pollSCM('0 1 * * *')
+    }
+
+    options {
+        skipStagesAfterUnstable()
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                sh 'cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-O0 -fno-elide-constructors -fno-default-inline -fprofile-arcs -ftest-coverage" -B build'
+                sh 'cmake --build build -j 4'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'sleep 1'
+                sh 'cd build && ctest'
+            }
+        }
+        stage('Generate coverage report') {
+            steps {
+                sh 'cd utils && python3 ./generate_coverage-report.py'
+                sh "mkdir -p /var/www/html/jenkins/coverage-reports/${env.JOB_NAME}"
+                sh "cp -r coverage-report /var/www/html/jenkins/coverage-reports/${env.JOB_NAME}/\$(date +%Y-%m-%d)_build-${env.BUILD_NUMBER}"
+            }
+        }
+    }
+
+    post {
+
+    }
+}

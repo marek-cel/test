@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+
+    environment {
+        RECIPIENT_LIST = 'dev@marekcel.pl'
+    }
+
+    triggers {
+        cron('0 1 * * 6')
+        pollSCM('0 1 * * *')
+    }
+
+    options {
+        skipStagesAfterUnstable()
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                bat 'cmake . --list-presets'
+                bat 'cmake . --preset=windows-release-conf -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake -B build'
+                bat 'cmake --preset=windows-release-build --build build -j 4'
+            }
+        }
+        stage('Test') {
+            steps {
+                bat 'cd build && ctest'
+            }
+        }
+    }
+
+    post {
+
+    }
+}
