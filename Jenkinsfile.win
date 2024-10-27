@@ -20,7 +20,7 @@ pipeline {
                 bat 'cmake --help'
                 bat 'cmake . --list-presets'
                 bat 'cmake . --preset=windows-release-conf -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake -B ./build'
-                bat 'cmake ./build -B --preset=windows-release-build'
+                bat 'cmake -B ./build --preset=windows-release-build'
             }
         }
         stage('Test') {
